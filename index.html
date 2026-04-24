@@ -11,7 +11,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--w:#EFEFEF;--w70:rgba(239,239,239,.70);--w40:rgba(239,239,239,.40);--w20:rgba(239,239,239,.20);--w10:rgba(239,239,239,.10);--w05:rgba(239,239,239,.05)}
-    html,body{width:100%;height:100%;background:#000;color:var(--w);font-family:'IBM Plex Mono',monospace;overflow:hidden;touch-action:none;-webkit-font-smoothing:antialiased}
+    html,body{width:100%;height:100%;background:#000;color:var(--w);font-family:'IBM Plex Mono',monospace;overflow:hidden;-webkit-font-smoothing:antialiased}
     @media(pointer:fine){body{cursor:none}}
     #cur{position:fixed;z-index:9999;width:4px;height:4px;background:var(--w);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
     @media(pointer:coarse){#cur{display:none}}
@@ -47,14 +47,14 @@
     .ticket-btn:hover{background:var(--w);color:#000}
     #overlay{position:fixed;inset:0;z-index:8;pointer-events:none;background:#000;will-change:background}
     #ui-bottom{position:fixed;bottom:clamp(18px,4vh,32px);left:50%;transform:translateX(-50%);z-index:20;pointer-events:all}
-    #reveal-btn{font-family:'IBM Plex Mono',monospace;font-size:clamp(10px,2.2vw,12px);letter-spacing:.2em;font-weight:700;text-transform:uppercase;color:var(--w);background:transparent;border:1px solid var(--w40);padding:12px 28px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+    #reveal-btn{font-family:'IBM Plex Mono',monospace;font-size:clamp(10px,2.2vw,12px);letter-spacing:.2em;font-weight:700;text-transform:uppercase;color:var(--w);background:transparent;border:1px solid var(--w40);padding:12px 28px;cursor:pointer;white-space:nowrap;-webkit-appearance:none;transition:background .15s,color .15s,border-color .15s}
     #reveal-btn:hover{background:var(--w);color:#000;border-color:var(--w)}
-    #panel{position:fixed;bottom:0;left:0;right:0;height:90dvh;background:#000;border-top:1px solid var(--w20);transform:translateY(100%);transition:transform .50s cubic-bezier(.22,.61,.36,1);z-index:100;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    #panel{position:fixed;bottom:0;left:0;right:0;height:90dvh;background:#000;border-top:1px solid var(--w20);transform:translateY(100%);transition:transform .50s cubic-bezier(.22,.61,.36,1);z-index:200;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
     #panel.open{transform:translateY(0)}
     .panel-inner{padding:clamp(20px,5vw,32px);padding-bottom:52px}
     .panel-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
     .panel-tag{font-size:8px;letter-spacing:.28em;color:var(--w40);text-transform:uppercase}
-    #close-btn{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--w40);background:none;border:none;cursor:pointer;padding:4px;transition:color .15s}
+    #close-btn{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--w40);background:none;border:none;cursor:pointer;padding:8px;-webkit-appearance:none;transition:color .15s}
     #close-btn:hover{color:var(--w)}
     .psec{margin-bottom:28px}
     .psec-label{font-size:7px;letter-spacing:.3em;color:var(--w20);text-transform:uppercase;margin-bottom:14px}
@@ -72,7 +72,7 @@
     .pstep-body strong{color:var(--w);font-weight:700}
     .code-row{display:flex;align-items:center;gap:8px;margin-top:12px}
     .code-val{font-size:clamp(14px,3.5vw,17px);font-weight:700;letter-spacing:.12em;color:var(--w);background:var(--w05);border:1px solid var(--w20);padding:9px 14px;flex:1}
-    .copy-btn{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;background:none;border:1px solid var(--w20);color:var(--w40);padding:9px 12px;cursor:pointer;flex-shrink:0;transition:all .15s}
+    .copy-btn{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;background:none;border:1px solid var(--w20);color:var(--w40);padding:9px 12px;cursor:pointer;flex-shrink:0;-webkit-appearance:none;transition:all .15s}
     .copy-btn:hover,.copy-btn.done{background:var(--w);color:#000;border-color:var(--w)}
     .pstep-note{margin-top:8px;font-size:9.5px;letter-spacing:.1em;color:var(--w20);line-height:1.65}
     .detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--w05);font-size:clamp(10px,2.2vw,12px)}
@@ -151,36 +151,142 @@
   </div>
 </div>
 <script>
-const overlay=document.getElementById('overlay'),sonar=document.getElementById('sonar'),cur=document.getElementById('cur');
-let cx=innerWidth/2,cy=innerHeight/2,tx=cx,ty=cy,isTouching=false,tAlpha=0,sonarGone=false,rafOn=true;
-const BPM=126,BEAT=60000/BPM,R_BASE=138,R_AMP=26,EASE=.10;
-const isMouse=()=>matchMedia('(pointer:fine)').matches;
-function killSonar(){if(!sonarGone){sonar.classList.add('gone');sonarGone=true;}}
-document.addEventListener('mousemove',e=>{tx=e.clientX;ty=e.clientY;cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';killSonar();});
-document.addEventListener('touchstart',e=>{isTouching=true;tx=e.touches[0].clientX;ty=e.touches[0].clientY;killSonar();e.preventDefault();},{passive:false});
-document.addEventListener('touchmove',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;e.preventDefault();},{passive:false});
-document.addEventListener('touchend',()=>{isTouching=false;});
-requestAnimationFrame(function loop(ts){
-  requestAnimationFrame(loop);
-  if(!rafOn)return;
-  cx+=(tx-cx)*EASE;cy+=(ty-cy)*EASE;
-  const phase=(ts%BEAT)/BEAT;
-  if(isMouse()){tAlpha=1;}else{tAlpha=isTouching?Math.min(1,tAlpha+.08):Math.max(0,tAlpha-.02);}
-  const r=(R_BASE+Math.sin(phase*Math.PI*2)*R_AMP)*tAlpha;
-  const s1=(r*.50).toFixed(1),s2=(r*.80).toFixed(1),s3=r.toFixed(1),s4=(r*1.38).toFixed(1);
-  overlay.style.background=`radial-gradient(circle at ${cx.toFixed(1)}px ${cy.toFixed(1)}px,transparent 0%,transparent ${s1}px,rgba(0,0,0,.10) ${s1}px,rgba(0,0,0,.55) ${s2}px,rgba(0,0,0,.93) ${s3}px,#000 ${s4}px)`;
-});
-const panel=document.getElementById('panel');
-document.getElementById('reveal-btn').addEventListener('click',()=>{panel.classList.add('open');rafOn=false;});
-document.getElementById('close-btn').addEventListener('click',close);
-function close(){panel.classList.remove('open');rafOn=true;}
-let sY=0;
-panel.addEventListener('touchstart',e=>{sY=e.touches[0].clientY;},{passive:true});
-panel.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-sY>72&&panel.scrollTop<=2)close();},{passive:true});
-document.getElementById('copy-btn').addEventListener('click',function(){
-  navigator.clipboard.writeText('NABA26').then(()=>{this.textContent='Copied';this.classList.add('done');setTimeout(()=>{this.textContent='Copy';this.classList.remove('done');},2000);});
-});
-document.body.addEventListener('touchmove',e=>{if(!panel.classList.contains('open'))e.preventDefault();},{passive:false});
+(function(){
+  var overlay  = document.getElementById('overlay');
+  var sonar    = document.getElementById('sonar');
+  var cur      = document.getElementById('cur');
+  var panel    = document.getElementById('panel');
+  var revealBtn= document.getElementById('reveal-btn');
+  var closeBtn = document.getElementById('close-btn');
+  var copyBtn  = document.getElementById('copy-btn');
+
+  var cx = innerWidth/2, cy = innerHeight/2;
+  var tx = cx, ty = cy;
+  var tAlpha = 0, isTouching = false;
+  var sonarGone = false, rafOn = true;
+
+  var BPM=126, BEAT=60000/BPM, R_BASE=138, R_AMP=26, EASE=0.10;
+
+  function isInteractive(el){
+    return !!(el && el.closest('button,a,[role="button"]'));
+  }
+
+  function killSonar(){
+    if(!sonarGone){ sonar.classList.add('gone'); sonarGone=true; }
+  }
+
+  /* ── MOUSE ── */
+  document.addEventListener('mousemove', function(e){
+    tx=e.clientX; ty=e.clientY;
+    cur.style.left=e.clientX+'px';
+    cur.style.top=e.clientY+'px';
+    killSonar();
+  });
+
+  /* ── TOUCH: spotlight only on non-interactive targets ── */
+  document.addEventListener('touchstart', function(e){
+    var t = e.touches[0];
+    /* always track position */
+    tx = t.clientX; ty = t.clientY;
+    killSonar();
+    /* only hijack touch (spotlight) when NOT tapping a button/link */
+    if(isInteractive(e.target)) return;
+    isTouching = true;
+    e.preventDefault();
+  }, {passive: false});
+
+  document.addEventListener('touchmove', function(e){
+    /* allow scroll inside open panel */
+    if(panel.classList.contains('open')) return;
+    /* block page scroll; update spotlight */
+    if(!isInteractive(e.target)){
+      isTouching = true;
+      tx = e.touches[0].clientX;
+      ty = e.touches[0].clientY;
+      e.preventDefault();
+    }
+  }, {passive: false});
+
+  document.addEventListener('touchend', function(){
+    isTouching = false;
+  });
+
+  /* ── RAF LOOP ── */
+  var isMouse = function(){ return matchMedia('(pointer:fine)').matches; };
+
+  requestAnimationFrame(function loop(ts){
+    requestAnimationFrame(loop);
+    if(!rafOn){ overlay.style.background='#000'; return; }
+    cx += (tx-cx)*EASE;
+    cy += (ty-cy)*EASE;
+    var phase = (ts % BEAT) / BEAT;
+    var pulse = Math.sin(phase * Math.PI * 2) * R_AMP;
+    if(isMouse()){
+      tAlpha = 1;
+    } else {
+      tAlpha = isTouching
+        ? Math.min(1, tAlpha + 0.08)
+        : Math.max(0, tAlpha - 0.02);
+    }
+    var r  = (R_BASE + pulse) * tAlpha;
+    var s1 = (r*0.50).toFixed(1);
+    var s2 = (r*0.80).toFixed(1);
+    var s3 = r.toFixed(1);
+    var s4 = (r*1.38).toFixed(1);
+    overlay.style.background =
+      'radial-gradient(circle at '+cx.toFixed(1)+'px '+cy.toFixed(1)+'px,'+
+      'transparent 0%,'+
+      'transparent '+s1+'px,'+
+      'rgba(0,0,0,.10) '+s1+'px,'+
+      'rgba(0,0,0,.55) '+s2+'px,'+
+      'rgba(0,0,0,.93) '+s3+'px,'+
+      '#000 '+s4+'px)';
+  });
+
+  /* ── PANEL OPEN ── */
+  revealBtn.addEventListener('click', function(){
+    panel.classList.add('open');
+    rafOn = false;
+  });
+
+  /* ── PANEL CLOSE ── */
+  function closePanel(){
+    panel.classList.remove('open');
+    rafOn = true;
+  }
+  closeBtn.addEventListener('click', closePanel);
+
+  /* swipe down to close */
+  var swipeStartY = 0;
+  panel.addEventListener('touchstart', function(e){
+    swipeStartY = e.touches[0].clientY;
+  }, {passive:true});
+  panel.addEventListener('touchend', function(e){
+    var dy = e.changedTouches[0].clientY - swipeStartY;
+    if(dy > 72 && panel.scrollTop <= 2) closePanel();
+  }, {passive:true});
+
+  /* ── COPY CODE ── */
+  copyBtn.addEventListener('click', function(){
+    var btn = this;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText('NABA26').then(function(){
+        btn.textContent='Copied'; btn.classList.add('done');
+        setTimeout(function(){ btn.textContent='Copy'; btn.classList.remove('done'); }, 2000);
+      });
+    } else {
+      /* fallback */
+      var ta = document.createElement('textarea');
+      ta.value='NABA26'; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try{ document.execCommand('copy'); } catch(err){}
+      document.body.removeChild(ta);
+      btn.textContent='Copied'; btn.classList.add('done');
+      setTimeout(function(){ btn.textContent='Copy'; btn.classList.remove('done'); }, 2000);
+    }
+  });
+
+})();
 </script>
 </body>
 </html>
